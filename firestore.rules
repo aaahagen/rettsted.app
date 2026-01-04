@@ -5,7 +5,8 @@ service cloud.firestore {
     // Allow users to manage their own user document
     match /users/{userId} {
       allow read, update: if request.auth.uid == userId;
-      allow create: if request.auth.uid != null;
+      // Allow user creation only if the user's UID matches the document ID
+      allow create: if request.auth.uid == userId;
     }
 
     // Allow any authenticated user to read, create, and update locations
