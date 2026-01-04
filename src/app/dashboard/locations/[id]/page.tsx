@@ -107,6 +107,7 @@ function LocationDetailSkeleton() {
 export default function LocationDetailPage({ params }: { params: { id: string } }) {
   const [location, setLocation] = useState<DeliveryLocation | null>(null);
   const [loading, setLoading] = useState(true);
+  const genericLocationImage = PlaceHolderImages.find(p => p.id === 'generic-location');
 
   useEffect(() => {
     const docRef = doc(db, "locations", params.id);
@@ -141,7 +142,12 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
     notFound();
   }
   
-  const alleyImage = PlaceHolderImages.find(p => p.id === 'alley-way');
+  const images = location.images && location.images.length > 0
+    ? location.images
+    : genericLocationImage
+      ? [{ id: 'placeholder', url: genericLocationImage.imageUrl, caption: genericLocationImage.description, uploadedBy: '', uploadedAt: Timestamp.now() }]
+      : [];
+
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -190,40 +196,31 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                     <CardTitle className="font-headline">Bildegalleri</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {location.images && location.images.length > 0 ? (
-                         <div className="space-y-4">
-                            <Carousel className="w-full">
-                                <CarouselContent>
-                                    {location.images.map((image, index) => (
-                                        <CarouselItem key={index}>
-                                            <div className="p-1">
-                                                <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted">
-                                                    <NextImage src={image.url} alt={image.caption || `Bilde ${index + 1}`} fill style={{ objectFit: 'cover' }} />
-                                                </div>
-                                                {image.caption && <p className="text-sm text-muted-foreground mt-2 text-center">{image.caption}</p>}
-                                            </div>
-                                        </CarouselItem>
-                                    ))}
-                                </CarouselContent>
+                   <div className="space-y-4">
+                      <Carousel className="w-full">
+                          <CarouselContent>
+                              {images.map((image, index) => (
+                                  <CarouselItem key={image.id || index}>
+                                      <div className="p-1">
+                                          <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted">
+                                              <NextImage src={image.url} alt={image.caption || `Bilde ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                                          </div>
+                                          {image.caption && image.id !== 'placeholder' && <p className="text-sm text-muted-foreground mt-2 text-center">{image.caption}</p>}
+                                      </div>
+                                  </CarouselItem>
+                              ))}
+                          </CarouselContent>
+                          {images.length > 1 && (
+                            <>
                                 <CarouselPrevious />
                                 <CarouselNext />
-                            </Carousel>
-                             <div className="border-t pt-4 flex justify-center">
-                                <ImageUploader locationId={location.id} />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 px-4 border-2 border-dashed rounded-lg">
-                            <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h3 className="mt-4 text-lg font-medium">Ingen bilder</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Det er ikke lastet opp noen bilder for dette stedet enda.
-                            </p>
-                            <div className="mt-4">
-                                <ImageUploader locationId={location.id} />
-                            </div>
-                        </div>
-                    )}
+                            </>
+                          )}
+                      </Carousel>
+                       <div className="border-t pt-4 flex justify-center">
+                          <ImageUploader locationId={location.id} />
+                      </div>
+                  </div>
                 </CardContent>
             </Card>
         </div>
