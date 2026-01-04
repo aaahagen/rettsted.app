@@ -84,6 +84,7 @@ export default function Home() {
                   height={400}
                   className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
                   data-ai-hint={heroImage.imageHint}
+                  priority
                 />
               )}
             </div>

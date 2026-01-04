@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to manage their own user document
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+
+    // Allow any authenticated user to read, create, and update locations
+    match /locations/{locationId} {
+      allow read, create, update: if request.auth.uid != null;
+    }
+  }
+}
