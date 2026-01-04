@@ -7,17 +7,24 @@ import { UserNav } from './UserNav';
 import { AppSidebar } from './AppSidebar';
 import { RettStedIcon } from '../icons';
 
+const Logo = () => (
+    <Link
+      href="/dashboard"
+      className="flex items-center gap-2 text-lg font-semibold md:text-base"
+    >
+      <RettStedIcon className="h-6 w-6" />
+       <span className="text-xl font-bold font-headline text-primary">
+        Rett<span className="text-accent">St</span>ed
+      </span>
+    </Link>
+);
+
+
 export function Header() {
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 sticky top-0 z-30">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 text-lg font-semibold md:text-base"
-        >
-          <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline uppercase text-primary">RETTSTED</span>
-        </Link>
+        <Logo />
       </nav>
       <Sheet>
         <SheetTrigger asChild>

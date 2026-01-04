@@ -14,6 +14,16 @@ import { useToast } from '@/hooks/use-toast';
 import { RettStedIcon } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
+const Logo = () => (
+    <Link href="/" className="flex items-center gap-2 text-foreground">
+        <RettStedIcon className="h-6 w-6" />
+        <span className="text-xl font-bold text-primary">
+            Rett<span className="text-accent">St</span>ed
+        </span>
+    </Link>
+);
+
+
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -71,10 +81,7 @@ export default function RegisterPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader>
            <div className="flex justify-center mb-4">
-            <Link href="/" className="flex items-center gap-2 text-foreground">
-              <RettStedIcon className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold uppercase text-primary">RETTSTED</span>
-            </Link>
+            <Logo />
           </div>
           <CardTitle className="text-2xl text-center">Opprett en konto</CardTitle>
           <CardDescription className="text-center">

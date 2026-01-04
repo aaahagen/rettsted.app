@@ -29,16 +29,23 @@ const features = [
   },
 ];
 
+const Logo = () => (
+    <Link href="#" className="flex items-center justify-center" prefetch={false}>
+        <RettStedIcon className="h-6 w-6" />
+        <span className="ml-2 text-xl font-bold font-headline text-primary">
+            Rett<span className="text-accent">St</span>ed
+        </span>
+    </Link>
+);
+
+
 export default function Home() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'delivery-truck-city');
 
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
-        <Link href="#" className="flex items-center justify-center" prefetch={false}>
-          <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-bold font-headline uppercase text-primary">RETTSTED</span>
-        </Link>
+        <Logo />
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
             href="/login"

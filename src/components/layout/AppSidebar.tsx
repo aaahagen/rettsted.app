@@ -8,6 +8,16 @@ import { cn } from '@/lib/utils';
 import { RettStedIcon } from '../icons';
 import { UserNav } from './UserNav';
 
+const Logo = () => (
+    <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+      <RettStedIcon className="h-6 w-6" />
+      <span className="text-xl font-bold font-headline text-primary">
+        Rett<span className="text-accent">St</span>ed
+      </span>
+    </Link>
+);
+
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
@@ -26,10 +36,7 @@ export function AppSidebar() {
   return (
     <div className="flex h-full max-h-screen flex-col">
       <div className="flex h-16 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline uppercase text-primary">RETTSTED</span>
-        </Link>
+        <Logo />
       </div>
       <div className="flex-1 overflow-y-auto">
         <nav className="grid items-start px-2 text-sm font-medium lg:px-4 mt-4">
