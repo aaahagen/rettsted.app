@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { RettStedLogo } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { setDoc, doc } from 'firebase/firestore';
 
 const Logo = () => (
     <Link href="/" className="flex items-center gap-2 text-foreground">
@@ -117,7 +118,7 @@ export default function RegisterPage() {
                 type="password" 
                 required 
                 value={password}
-                onChange={(e) => setPassword(e.g.et.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
