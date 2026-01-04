@@ -29,6 +29,7 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
+    console.log("Uploader user:", user);
     if (!file || !user) {
       if (!user) {
         toast({
@@ -91,14 +92,17 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
             case 'storage/unauthorized':
                 description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene i Firebase.';
                 break;
+            case 'storage/object-not-found':
+                 description = 'Filen ble ikke funnet. Dette kan skje hvis opplastingen ble avbrutt.';
+                break;
             case 'storage/unknown':
-                description = 'En ukjent feil oppstod. Dette kan skyldes CORS-innstillinger. Se konsollen.';
+                description = 'En ukjent feil oppstod med Storage. Dette kan skyldes CORS-innstillinger. Se konsollen.';
                 break;
             case 'permission-denied':
                 description = 'Tilgang nektet til databasen. Sjekk Firestore-reglene.';
                 break;
             default:
-                description = `En feil oppstod: ${error.code}`;
+                description = `En feil oppstod: ${error.code || error.message}`;
         }
       }
       
