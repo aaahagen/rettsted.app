@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "delivery-truck-city",
+      "description": "A delivery truck on a city street.",
+      "imageUrl": "https://images.unsplash.com/photo-1594960598451-f8509775168b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkZWxpdmVyeSUyMHRydWNrfGVufDB8fHx8MTc2NzQ0NTg3MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "delivery truck"
+    },
+    {
+      "id": "warehouse-door",
+      "description": "A rolling metal door of a warehouse or loading dock.",
+      "imageUrl": "https://images.unsplash.com/photo-1593964546204-882946dda737?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx3YXJlaG91c2UlMjBkb29yfGVufDB8fHx8MTc2NzQ4NTQ3NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "warehouse door"
+    },
+    {
+      "id": "parking-sign",
+      "description": "A parking sign on a street.",
+      "imageUrl": "https://images.unsplash.com/photo-1686425641440-03d1cfbcea4b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwYXJraW5nJTIwc2lnbnxlbnwwfHx8fDE3Njc0ODU0NzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "parking sign"
+    },
+    {
+      "id": "alley-way",
+      "description": "A narrow alleyway between buildings, representing access.",
+      "imageUrl": "https://images.unsplash.com/photo-1559531717-c35ca41c372a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjaXR5JTIwYWxsZXl8ZW58MHx8fHwxNzY3NDMxMTIwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "city alley"
+    },
+    {
+      "id": "generic-location",
+      "description": "A generic storefront.",
+      "imageUrl": "https://images.unsplash.com/photo-1529676468696-f3a47aba7d5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzdG9yZSUyMGZyb250fGVufDB8fHx8MTc2NzQzMjY4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "store front"
+    }
+  ]
 }
