@@ -40,16 +40,14 @@ export default function RegisterPage() {
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
 
-      // 3. Create user document in Firestore
-      console.log("A: før lagring");
+      // 3. Create user document in Firestore using the guaranteed user object
       const userDocRef = doc(db, 'users', user.uid);
-      // await setDoc(userDocRef, {
-      //   displayName: name,
-      //   email: email,
-      //   role: 'driver', // Default role for new users
-      //   createdAt: serverTimestamp(),
-      // });
-      console.log("B: før redirect");
+      await setDoc(userDocRef, {
+        displayName: name,
+        email: email,
+        role: 'driver', // Default role for new users
+        createdAt: serverTimestamp(),
+      });
       
       toast({
         title: 'Registrering vellykket',
