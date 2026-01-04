@@ -41,13 +41,15 @@ export default function RegisterPage() {
       await updateProfile(user, { displayName: name });
 
       // 3. Create user document in Firestore
+      console.log("A: før lagring");
       const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
-        displayName: name,
-        email: email,
-        role: 'driver', // Default role for new users
-        createdAt: serverTimestamp(),
-      });
+      // await setDoc(userDocRef, {
+      //   displayName: name,
+      //   email: email,
+      //   role: 'driver', // Default role for new users
+      //   createdAt: serverTimestamp(),
+      // });
+      console.log("B: før redirect");
       
       toast({
         title: 'Registrering vellykket',
