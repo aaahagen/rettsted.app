@@ -17,10 +17,6 @@ export function AppSidebar() {
     { href: '/dashboard/locations/new', icon: PlusCircle, label: 'Ny Lokasjon' },
   ];
 
-  const adminNavItems = [
-    { href: '/dashboard/admin', icon: Shield, label: 'Admin' },
-  ];
-
   const isActive = (path: string) => {
     if (path === '/dashboard') return pathname === path;
     return pathname.startsWith(path);
@@ -37,19 +33,6 @@ export function AppSidebar() {
       <div className="flex-1">
         <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
           {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                isActive(item.href) && 'bg-muted text-primary'
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-          {user?.role === 'admin' && adminNavItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
