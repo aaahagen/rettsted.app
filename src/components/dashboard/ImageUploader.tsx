@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { storage, db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/use-auth';
 import { UploadCloud } from 'lucide-react';
@@ -28,6 +28,7 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    
     if (!file || !user) {
       if (!user) {
         toast({
@@ -40,6 +41,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
     }
 
     setUploading(true);
+    console.log("File to upload:", file);
+    console.log("User UID:", user.uid);
+    console.log("Location ID:", locationId);
 
     try {
       // 1. Create a unique reference in Firebase Storage
@@ -53,8 +57,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
 
       // 3. Get the download URL
       const downloadURL = await getDownloadURL(storageRef);
+      console.log("Download URL:", downloadURL);
 
-      // 4. Update the Firestore document
+      // 4. Update the Firestore document using setDoc with merge
       const locationRef = doc(db, 'locations', locationId);
       const newImage = {
         id: fileId,
@@ -64,14 +69,14 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
         uploadedAt: serverTimestamp(),
       };
 
-      await updateDoc(locationRef, {
+      await setDoc(locationRef, {
         images: arrayUnion(newImage),
         lastUpdatedAt: serverTimestamp(),
         lastUpdatedBy: {
           uid: user.uid,
           name: user.displayName || 'Ukjent Bruker',
         }
-      });
+      }, { merge: true });
 
       toast({
         title: 'Bilde lastet opp!',
@@ -79,13 +84,24 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       });
 
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('Detailed Upload Error:', error);
       let description = 'Kunne ikke laste opp bildet. Prøv igjen.';
-      if (error.code === 'storage/unauthorized') {
-          description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene i Firebase.';
-      } else if (error.code === 'storage/unknown') {
-          description = 'En ukjent feil oppstod. Dette kan skyldes CORS-innstillinger. Se konsollen for detaljer.';
+      if (error.code) {
+        switch (error.code) {
+            case 'storage/unauthorized':
+                description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene i Firebase.';
+                break;
+            case 'storage/unknown':
+                description = 'En ukjent feil oppstod. Dette kan skyldes CORS-innstillinger. Se konsollen.';
+                break;
+            case 'permission-denied':
+                description = 'Tilgang nektet til databasen. Sjekk Firestore-reglene.';
+                break;
+            default:
+                description = `En feil oppstod: ${error.code}`;
+        }
       }
+      
       toast({
         variant: 'destructive',
         title: 'Opplasting feilet',
@@ -99,6 +115,14 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       }
     }
   };
+
+  if (!user) {
+    return (
+        <Button variant="secondary" disabled>
+            Logg inn for å laste opp
+        </Button>
+    )
+  }
 
   return (
     <div>
