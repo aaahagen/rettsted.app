@@ -30,6 +30,8 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // BEVIS-TEST: Midlertidig deaktivert for feilsøking
+      /*
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
 
@@ -41,10 +43,11 @@ export default function RegisterPage() {
         role: 'admin', // Default role for new users
         createdAt: serverTimestamp(),
       });
+      */
       
       toast({
-        title: 'Registrering vellykket',
-        description: 'Kontoen din er opprettet.',
+        title: 'Registrering vellykket (Test)',
+        description: 'Videresender til dashbord...',
       });
       router.push('/dashboard');
     } catch (error: any) {
@@ -84,8 +87,7 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleRegister} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Fullt navn</Label>
-              <Input 
+              <Label htmlFor="name">Fullt navn</Label>              <Input 
                 id="name" 
                 placeholder="Ola Normann" 
                 required
