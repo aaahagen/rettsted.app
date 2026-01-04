@@ -32,35 +32,45 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("1: submit startet");
+
     try {
       // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("2: auth user", user?.uid);
 
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
 
       // 3. Create user document in Firestore using the guaranteed user object
       const userDocRef = doc(db, 'users', user.uid);
+      console.log("3: før firestore");
       await setDoc(userDocRef, {
         displayName: name,
         email: email,
         role: 'driver', // Default role for new users
         createdAt: serverTimestamp(),
       });
+      console.log("4: etter firestore");
       
       toast({
         title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
+      
       router.push('/dashboard');
+      console.log("5: redirect ferdig");
+
     } catch (error: any) {
-      console.error(error);
+      console.error("Registreringsfeil:", error);
       let errorMessage = 'En ukjent feil oppstod. Prøv igjen.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'Denne e-postadressen er allerede i bruk.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Passordet er for svakt. Bruk minst 6 tegn.';
+      } else if (error.message.includes('permission-denied')) {
+        errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Sjekk sikkerhetsregler.'
       }
       toast({
         variant: 'destructive',
