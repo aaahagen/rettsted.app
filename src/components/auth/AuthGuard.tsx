@@ -6,15 +6,18 @@ import { useEffect, type ReactNode } from 'react';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
 export default function AuthGuard({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, firebaseUser, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // If loading is finished and there's no Firebase user, redirect to login.
+    if (!loading && !firebaseUser) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [firebaseUser, loading, router]);
 
+  // Show a loading spinner while auth state is being determined,
+  // or if we have a Firebase user but are still waiting for the app user data from Firestore.
   if (loading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -23,5 +26,6 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
+  // If we have the user data, render the protected children.
   return <>{children}</>;
 }
