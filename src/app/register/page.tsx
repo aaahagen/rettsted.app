@@ -41,8 +41,13 @@ export default function RegisterPage() {
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
       
-      // NOTE: The user document in Firestore is now created by a Cloud Function (`createUserDocument`)
-      // that triggers on `functions.auth.user().onCreate()`. We don't need to call setDoc here anymore.
+      // 3. Create user document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        displayName: name,
+        email: user.email,
+        role: 'driver' // Default role
+      });
       
       toast({
         title: 'Registrering vellykket',
