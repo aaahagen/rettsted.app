@@ -34,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // This case might happen if a user is deleted from Firestore but not Auth
             setUser(null);
           }
-          setLoading(false); // Loading is false only after Firestore check
+          // Loading is complete only after we have checked for the Firestore document.
+          setLoading(false);
         }, (error) => {
           console.error("Error fetching user document:", error);
           setUser(null);
