@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, getDoc, Timestamp, onSnapshot } from "firebase/firestore";
+import { doc, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { DeliveryLocation } from "@/lib/types";
 import { notFound, useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ImageUploader from "@/components/dashboard/ImageUploader";
 
 
 const InfoCard = ({ icon, title, content }: { icon: React.ReactNode, title: string, content?: string | null }) => {
@@ -190,22 +191,27 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                 </CardHeader>
                 <CardContent>
                     {location.images && location.images.length > 0 ? (
-                        <Carousel className="w-full">
-                            <CarouselContent>
-                                {location.images.map((image, index) => (
-                                    <CarouselItem key={index}>
-                                        <div className="p-1">
-                                            <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted">
-                                                <NextImage src={image.url} alt={image.caption || `Bilde ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                         <div className="space-y-4">
+                            <Carousel className="w-full">
+                                <CarouselContent>
+                                    {location.images.map((image, index) => (
+                                        <CarouselItem key={index}>
+                                            <div className="p-1">
+                                                <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted">
+                                                    <NextImage src={image.url} alt={image.caption || `Bilde ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                                                </div>
+                                                {image.caption && <p className="text-sm text-muted-foreground mt-2 text-center">{image.caption}</p>}
                                             </div>
-                                            {image.caption && <p className="text-sm text-muted-foreground mt-2 text-center">{image.caption}</p>}
-                                        </div>
-                                    </CarouselItem>
-                                ))}
-                            </CarouselContent>
-                            <CarouselPrevious />
-                            <CarouselNext />
-                        </Carousel>
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                                <CarouselPrevious />
+                                <CarouselNext />
+                            </Carousel>
+                             <div className="border-t pt-4 flex justify-center">
+                                <ImageUploader locationId={location.id} />
+                            </div>
+                        </div>
                     ) : (
                         <div className="text-center py-8 px-4 border-2 border-dashed rounded-lg">
                             <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -213,9 +219,9 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                             <p className="mt-1 text-sm text-muted-foreground">
                                 Det er ikke lastet opp noen bilder for dette stedet enda.
                             </p>
-                            <Button variant="secondary" className="mt-4">
-                                Last opp bilde
-                            </Button>
+                            <div className="mt-4">
+                                <ImageUploader locationId={location.id} />
+                            </div>
                         </div>
                     )}
                 </CardContent>

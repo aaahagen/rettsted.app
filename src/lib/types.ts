@@ -24,7 +24,7 @@ export interface DeliveryLocation {
   receivingNotes: string;
   openingHours: string;
   specialConsiderations: string;
-  images: ImageAsset[];
+  images?: ImageAsset[];
   lastUpdatedBy?: {
     uid: string;
     name: string;
