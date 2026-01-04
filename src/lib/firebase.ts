@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  projectId: 'studio-5726715282-ae599',
+  appId: '1:273761981942:web:bd7ede059c1e4a953be3d7',
+  apiKey: 'AIzaSyD1j9gNDdFUa-a4tg4EMGu66TOXDDynrBo',
+  authDomain: 'studio-5726715282-ae599.firebaseapp.com',
+  storageBucket: 'studio-5726715282-ae599.appspot.com',
+  messagingSenderId: '273761981942',
 };
 
 // Initialize Firebase
