@@ -32,27 +32,23 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("1: submit startet");
 
     try {
       // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("2: auth user", user?.uid);
 
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
 
       // 3. Create user document in Firestore using the guaranteed user object
       const userDocRef = doc(db, 'users', user.uid);
-      console.log("3: før firestore");
       await setDoc(userDocRef, {
         displayName: name,
         email: email,
         role: 'driver', // Default role for new users
         createdAt: serverTimestamp(),
       });
-      console.log("4: etter firestore");
       
       toast({
         title: 'Registrering vellykket',
@@ -60,7 +56,6 @@ export default function RegisterPage() {
       });
       
       router.push('/dashboard');
-      console.log("5: redirect ferdig");
 
     } catch (error: any) {
       console.error("Registreringsfeil:", error);
@@ -69,9 +64,12 @@ export default function RegisterPage() {
         errorMessage = 'Denne e-postadressen er allerede i bruk.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Passordet er for svakt. Bruk minst 6 tegn.';
-      } else if (error.message.includes('permission-denied') || error.code === 'permission-denied') {
+      } else if (error.code === 'permission-denied') {
         errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Sjekk sikkerhetsregler.'
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
       toast({
         variant: 'destructive',
         title: 'Feil ved registrering',
