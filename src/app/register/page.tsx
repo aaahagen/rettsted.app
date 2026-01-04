@@ -31,31 +31,30 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("1: submit startet");
     setIsLoading(true);
 
     try {
       // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("2: auth user", user.uid);
 
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
-
-      // 3. Create user document in Firestore using the guaranteed user object
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
-        displayName: name,
-        email: email,
-        role: 'driver', // Default role for new users
-        createdAt: serverTimestamp(),
-      });
       
+      console.log("3: før firestore (fjernet, håndteres av Cloud Function)");
+      // NOTE: The user document in Firestore is now created by a Cloud Function (`createUserDocument`)
+      // that triggers on `functions.auth.user().onCreate()`.
+      
+      console.log("4: etter firestore-logikk");
       toast({
         title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
       
       router.push('/dashboard');
+      console.log("5: redirect ferdig");
 
     } catch (error: any) {
       console.error("Registreringsfeil:", error);

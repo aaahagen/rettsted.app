@@ -1,6 +1,6 @@
 'use server';
 
-import { doc, setDoc, updateDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, serverTimestamp, addDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { AppUser } from './types';
 
@@ -36,8 +36,7 @@ export async function createOrUpdateLocation(
       return { id: locationId };
     } else {
       // Create new location
-      const newLocationRef = doc(collection(db, 'locations'));
-      await setDoc(newLocationRef, {
+      const newLocationRef = await addDoc(collection(db, 'locations'), {
         ...locationData,
         images: [],
         createdBy: {
