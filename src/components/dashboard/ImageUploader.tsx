@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { storage, db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, arrayUnion, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/use-auth';
 import { UploadCloud } from 'lucide-react';
@@ -28,61 +28,44 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    if (!file) return;
-
-    if (!user) {
+    if (!file || !user || !locationId) {
       toast({
         variant: 'destructive',
-        title: 'Ikke autentisert',
-        description: 'Du må være logget inn for å laste opp bilder.',
-      });
-      return;
-    }
-    
-    if (!locationId) {
-      toast({
-        variant: 'destructive',
-        title: 'Mangler Sted ID',
-        description: 'Kan ikke laste opp bilde uten en gyldig ID for stedet.',
+        title: 'Forutsetninger mangler',
+        description: 'Både fil, bruker og sted må være tilgjengelig.',
       });
       return;
     }
 
     setUploading(true);
-
-    console.log("Startet opplasting...");
-    console.log("File:", file.name, file.size);
+    
+    console.log("File to upload:", file);
     console.log("User UID:", user.uid);
     console.log("Uploading to locationId:", locationId);
 
     try {
-      // 1. Lag en unik filreferanse i Firebase Storage
       const fileId = uuidv4();
       const fileExtension = file.name.split('.').pop();
       const storagePath = `locations/${locationId}/${fileId}.${fileExtension}`;
       const storageRef = ref(storage, storagePath);
 
-      // 2. Last opp filen til Storage
-      console.log(`Laster opp til: ${storagePath}`);
+      console.log(`Uploading to: ${storagePath}`);
       await uploadBytes(storageRef, file);
-      console.log("Filopplasting til Storage var vellykket.");
+      console.log("File uploaded to Storage successfully.");
 
-      // 3. Hent nedlastings-URL
       const downloadURL = await getDownloadURL(storageRef);
-      console.log("Hentet Download URL:", downloadURL);
+      console.log("Retrieved Download URL:", downloadURL);
 
-      // 4. Forbered data for Firestore
       const locationRef = doc(db, 'locations', locationId);
       const newImage = {
         id: fileId,
         url: downloadURL,
         caption: '', 
         uploadedBy: user.uid,
-        uploadedAt: serverTimestamp(),
+        uploadedAt: Timestamp.now(), // Use client-side timestamp for arrayUnion
       };
 
-      // 5. Oppdater Firestore-dokumentet med setDoc og merge: true (ROBUST METODE)
-      console.log("Oppdaterer Firestore med setDoc({ merge: true }).");
+      console.log("Updating Firestore with setDoc({ merge: true }).");
       await setDoc(locationRef, {
         images: arrayUnion(newImage),
         lastUpdatedAt: serverTimestamp(),
@@ -91,7 +74,7 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
           name: user.displayName || 'Ukjent Bruker',
         }
       }, { merge: true });
-      console.log("Firestore-oppdatering var vellykket.");
+      console.log("Firestore update successful.");
 
       toast({
         title: 'Bilde lastet opp!',
@@ -99,24 +82,21 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       });
 
     } catch (error: any) {
-      console.error('Detaljert feil under opplasting:', error);
+      console.error('Detailed error during upload:', error);
       let description = 'En ukjent feil oppstod. Se konsollen for detaljer.';
       if (error.code) {
         switch (error.code) {
           case 'storage/unauthorized':
-            description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene i Firebase.';
+            description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene.';
             break;
           case 'storage/unknown':
-            description = 'Ukjent Storage-feil. Dette skyldes ofte feil CORS-innstillinger for din Storage Bucket.';
+            description = 'Ukjent Storage-feil. Dette skyldes ofte feil CORS-innstillinger.';
             break;
           case 'permission-denied':
             description = 'Tilgang nektet til databasen. Sjekk Firestore-reglene.';
             break;
-          case 'not-found':
-             description = 'Dokumentet som skulle oppdateres ble ikke funnet i databasen. Dette skulle vært unngått med setDoc.';
-             break;
           default:
-            description = `En feil oppstod: ${error.code || error.message}`;
+            description = `Feilkode: ${error.code}. Melding: ${error.message}`;
         }
       }
       
