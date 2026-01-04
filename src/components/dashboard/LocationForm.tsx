@@ -19,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { DeliveryLocation } from '@/lib/types';
 import LoadingSpinner from '../ui/loading-spinner';
 import { createOrUpdateLocation } from '@/lib/actions';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/hooks/use-auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -40,7 +40,7 @@ interface LocationFormProps {
 }
 
 export function LocationForm({ location }: LocationFormProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuthContext();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -73,6 +73,8 @@ export function LocationForm({ location }: LocationFormProps) {
         toast({ variant: 'destructive', title: 'Noe gikk galt', description: 'Kunne ikke lagre endringene.' });
     }
   };
+  
+  const isSubmitting = form.formState.isSubmitting || loading;
 
   return (
     <Card className="w-full max-w-3xl">
@@ -195,8 +197,8 @@ export function LocationForm({ location }: LocationFormProps) {
 
             <div className="flex justify-end gap-2">
                 <Button variant="outline" type="button" onClick={() => router.back()}>Avbryt</Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? <LoadingSpinner /> : (location ? 'Lagre endringer' : 'Opprett sted')}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <LoadingSpinner /> : (location ? 'Lagre endringer' : 'Opprett sted')}
                 </Button>
             </div>
           </form>
