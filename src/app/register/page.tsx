@@ -4,8 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,30 +30,25 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("1: submit startet");
     setIsLoading(true);
 
     try {
       // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("2: auth user", user.uid);
 
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
       
-      console.log("3: før firestore (fjernet, håndteres av Cloud Function)");
       // NOTE: The user document in Firestore is now created by a Cloud Function (`createUserDocument`)
-      // that triggers on `functions.auth.user().onCreate()`.
+      // that triggers on `functions.auth.user().onCreate()`. We don't need to call setDoc here anymore.
       
-      console.log("4: etter firestore-logikk");
       toast({
         title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
       
       router.push('/dashboard');
-      console.log("5: redirect ferdig");
 
     } catch (error: any) {
       console.error("Registreringsfeil:", error);
@@ -123,7 +117,7 @@ export default function RegisterPage() {
                 type="password" 
                 required 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.g.et.value)}
                 disabled={isLoading}
               />
             </div>
