@@ -6,7 +6,6 @@ import { Home, PlusCircle, LogOut, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { RettStedLogo } from '../icons';
-import { UserNav } from './UserNav';
 import { Button } from '../ui/button';
 import { auth } from '@/lib/firebase';
 import { Separator } from '../ui/separator';
@@ -70,11 +69,7 @@ export function AppSidebar() {
             </Button>
         </nav>
       </div>
-      <div className="mt-auto border-t p-4">
-        <div className="flex items-center justify-between">
-           <UserNav />
-        </div>
-      </div>
+      {/* UserNav is now only in the Header */}
     </div>
   );
 }

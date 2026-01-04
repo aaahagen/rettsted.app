@@ -25,3 +25,25 @@ export function RettStedLogo(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+
+export function RettStedIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="44"
+      height="44"
+      viewBox="0 0 220 220"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <g transform="translate(110,110)">
+        <circle r="90" fill="none" stroke="#1F4FD8" strokeWidth="8" />
+        <circle r="72" fill="none" stroke="#000000" strokeWidth="6" />
+        <circle r="56" fill="none" stroke="#1F4FD8" strokeWidth="6" />
+        <circle r="40" fill="none" stroke="#F28C28" strokeWidth="8" />
+        <circle r="24" fill="none" stroke="#000000" strokeWidth="4" />
+        <circle r="6" fill="#000000" />
+      </g>
+    </svg>
+  );
+}
