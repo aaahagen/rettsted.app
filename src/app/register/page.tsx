@@ -69,7 +69,7 @@ export default function RegisterPage() {
         errorMessage = 'Denne e-postadressen er allerede i bruk.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Passordet er for svakt. Bruk minst 6 tegn.';
-      } else if (error.message.includes('permission-denied')) {
+      } else if (error.message.includes('permission-denied') || error.code === 'permission-denied') {
         errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Sjekk sikkerhetsregler.'
       }
       toast({
