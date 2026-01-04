@@ -29,7 +29,6 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    console.log("Uploader user:", user);
     if (!file || !user) {
       if (!user) {
         toast({
@@ -42,9 +41,10 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
     }
 
     setUploading(true);
+    console.log("Uploading to locationId:", locationId);
     console.log("File to upload:", file);
     console.log("User UID:", user.uid);
-    console.log("Location ID:", locationId);
+
 
     try {
       // 1. Create a unique reference in Firebase Storage
@@ -60,7 +60,7 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       const downloadURL = await getDownloadURL(storageRef);
       console.log("Download URL:", downloadURL);
 
-      // 4. Update the Firestore document using setDoc with merge
+      // 4. Update the Firestore document using setDoc with merge: true
       const locationRef = doc(db, 'locations', locationId);
       const newImage = {
         id: fileId,
@@ -101,6 +101,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
             case 'permission-denied':
                 description = 'Tilgang nektet til databasen. Sjekk Firestore-reglene.';
                 break;
+            case 'not-found':
+                 description = 'Dokumentet som skulle oppdateres ble ikke funnet i databasen.';
+                 break;
             default:
                 description = `En feil oppstod: ${error.code || error.message}`;
         }
