@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { RoutemateIcon } from '@/components/icons';
+import { RettStedIcon } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
 export default function RegisterPage() {
@@ -72,8 +72,8 @@ export default function RegisterPage() {
         <CardHeader>
            <div className="flex justify-center mb-4">
             <Link href="/" className="flex items-center gap-2 text-foreground">
-              <RoutemateIcon className="h-6 w-6" />
-              <span className="text-xl font-bold">Routemate</span>
+              <RettStedIcon className="h-6 w-6" />
+              <span className="text-xl font-bold">Rett Sted</span>
             </Link>
           </div>
           <CardTitle className="text-2xl text-center">Opprett en konto</CardTitle>

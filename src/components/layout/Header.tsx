@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UserNav } from './UserNav';
 import { AppSidebar } from './AppSidebar';
-import { RoutemateIcon } from '../icons';
+import { RettStedIcon } from '../icons';
 
 export function Header() {
   return (
@@ -15,8 +15,8 @@ export function Header() {
           href="/dashboard"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
-          <RoutemateIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline">Routemate</span>
+          <RettStedIcon className="h-6 w-6 text-primary" />
+          <span className="font-bold font-headline">Rett Sted</span>
         </Link>
       </nav>
       <Sheet>

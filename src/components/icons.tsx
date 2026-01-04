@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-export function RoutemateIcon(props: SVGProps<SVGSVGElement>) {
+export function RettStedIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -14,9 +14,10 @@ export function RoutemateIcon(props: SVGProps<SVGSVGElement>) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="12" cy="12" r="2" fill="hsl(var(--accent))" stroke="hsl(var(--accent))" />
     </svg>
   );
 }

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, LogOut, PlusCircle, Shield, Truck } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { RoutemateIcon } from '../icons';
+import { RettStedIcon } from '../icons';
 import { Button } from '../ui/button';
 import { auth } from '@/lib/firebase';
 import { UserNav } from './UserNav';
@@ -34,8 +34,8 @@ export function AppSidebar() {
     <div className="flex h-full max-h-screen flex-col">
       <div className="flex h-16 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <RoutemateIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline">Routemate</span>
+          <RettStedIcon className="h-6 w-6 text-primary" />
+          <span className="font-bold font-headline">Rett Sted</span>
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto">

@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Routemate',
-  description: 'Smarter deliveries, happier drivers.',
+  title: 'Rett Sted',
+  description: 'Smartere leveranser, gladere sjåfører.',
 };
 
 export default function RootLayout({
