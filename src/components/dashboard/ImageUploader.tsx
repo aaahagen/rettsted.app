@@ -29,19 +29,10 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
     const file = event.target.files?.[0];
     
     if (!file || !user || !locationId) {
-      toast({
-        variant: 'destructive',
-        title: 'Forutsetninger mangler',
-        description: 'Både fil, bruker og sted må være tilgjengelig.',
-      });
       return;
     }
 
     setUploading(true);
-    
-    console.log("File to upload:", file);
-    console.log("User UID:", user.uid);
-    console.log("Uploading to locationId:", locationId);
 
     try {
       const fileId = uuidv4();
@@ -49,12 +40,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       const storagePath = `locations/${locationId}/${fileId}.${fileExtension}`;
       const storageRef = ref(storage, storagePath);
 
-      console.log(`Uploading to: ${storagePath}`);
       await uploadBytes(storageRef, file);
-      console.log("File uploaded to Storage successfully.");
-
+      
       const downloadURL = await getDownloadURL(storageRef);
-      console.log("Retrieved Download URL:", downloadURL);
 
       const locationRef = doc(db, 'locations', locationId);
       const newImage = {
@@ -62,10 +50,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
         url: downloadURL,
         caption: '', 
         uploadedBy: user.uid,
-        uploadedAt: Timestamp.now(), // Use client-side timestamp for arrayUnion
+        uploadedAt: Timestamp.now(),
       };
 
-      console.log("Updating Firestore with setDoc({ merge: true }).");
       await setDoc(locationRef, {
         images: arrayUnion(newImage),
         lastUpdatedAt: serverTimestamp(),
@@ -74,7 +61,6 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
           name: user.displayName || 'Ukjent Bruker',
         }
       }, { merge: true });
-      console.log("Firestore update successful.");
 
       toast({
         title: 'Bilde lastet opp!',
@@ -88,6 +74,9 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
         switch (error.code) {
           case 'storage/unauthorized':
             description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene.';
+            break;
+          case 'storage/object-not-found':
+             description = 'Filen ble ikke funnet etter opplasting. Sjekk Storage-reglene.';
             break;
           case 'storage/unknown':
             description = 'Ukjent Storage-feil. Dette skyldes ofte feil CORS-innstillinger.';
