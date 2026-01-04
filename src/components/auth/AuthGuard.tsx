@@ -31,5 +31,6 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   // If not loading and no user, we will be redirected by the effect, so we can return null.
+  // This prevents a flash of the children before the redirect happens.
   return null;
 }

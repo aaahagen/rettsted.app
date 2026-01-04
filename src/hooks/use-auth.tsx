@@ -5,56 +5,58 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { AppUser } from '@/lib/types';
-import LoadingSpinner from '@/components/ui/loading-spinner';
 
 export interface AuthContextType {
   user: AppUser | null;
-  firebaseUser: FirebaseUser | null;
   loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
-      setFirebaseUser(authUser);
       if (authUser) {
-        // If we have an authenticated user, we are still loading until we get their Firestore document.
+        // If we have an auth user, we are loading until we get the Firestore doc.
         setLoading(true);
         const userDocRef = doc(db, 'users', authUser.uid);
+        
         const unsubscribeFirestore = onSnapshot(userDocRef, (doc) => {
           if (doc.exists()) {
+            // We got the user document, set the user and stop loading.
             setUser({ uid: doc.id, ...doc.data() } as AppUser);
+            setLoading(false);
           } else {
-            // This case might happen if a user is deleted from Firestore but not Auth
+            // This case might happen if a user is deleted from Firestore but not Auth.
+            // Or on first registration before doc is created.
+            // We'll clear the user and let the AuthGuard handle it.
             setUser(null);
+            setLoading(false); 
           }
-          // Loading is complete only after we have checked for the Firestore document.
-          setLoading(false);
         }, (error) => {
           console.error("Error fetching user document:", error);
           setUser(null);
           setLoading(false);
         });
-        // Return the firestore unsubscribe function to be called when auth state changes
+
+        // This is returned by onAuthStateChanged to clean up the Firestore listener 
+        // when the auth state changes again.
         return unsubscribeFirestore;
       } else {
         // No authenticated user, so we are not loading and have no user.
         setUser(null);
-        setFirebaseUser(null);
         setLoading(false);
       }
     });
 
+    // Cleanup the auth subscription on unmount
     return () => unsubscribeAuth();
   }, []);
 
-  const value = { firebaseUser, user, loading };
+  const value = { user, loading };
 
   return (
     <AuthContext.Provider value={value}>
