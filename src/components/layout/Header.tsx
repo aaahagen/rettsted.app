@@ -16,7 +16,7 @@ export function Header() {
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
           <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline uppercase">Rett Sted</span>
+          <span className="font-bold font-headline uppercase text-primary">RETTSTED</span>
         </Link>
       </nav>
       <Sheet>

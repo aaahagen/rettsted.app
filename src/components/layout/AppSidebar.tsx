@@ -2,23 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, LogOut, PlusCircle, Shield, Truck } from 'lucide-react';
+import { Home, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { RettStedIcon } from '../icons';
-import { Button } from '../ui/button';
-import { auth } from '@/lib/firebase';
 import { UserNav } from './UserNav';
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const router = useRouter();
-
-  const handleLogout = async () => {
-    await auth.signOut();
-    router.push('/login');
-  };
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Dashbord' },
@@ -35,7 +28,7 @@ export function AppSidebar() {
       <div className="flex h-16 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline uppercase">Rett Sted</span>
+          <span className="font-bold font-headline uppercase text-primary">RETTSTED</span>
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto">

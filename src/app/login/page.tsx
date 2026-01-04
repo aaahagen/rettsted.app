@@ -48,8 +48,8 @@ export default function LoginPage() {
         <CardHeader>
           <div className="flex justify-center mb-4">
             <Link href="/" className="flex items-center gap-2 text-foreground">
-              <RettStedIcon className="h-6 w-6" />
-              <span className="text-xl font-bold uppercase">Rett Sted</span>
+              <RettStedIcon className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold uppercase text-primary">RETTSTED</span>
             </Link>
           </div>
           <CardTitle className="text-2xl text-center">Logg inn</CardTitle>
