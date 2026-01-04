@@ -16,6 +16,7 @@ import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploader from "@/components/dashboard/ImageUploader";
+import LocationMap from "@/components/dashboard/LocationMap";
 
 
 const InfoCard = ({ icon, title, content }: { icon: React.ReactNode, title: string, content?: string | null }) => {
@@ -232,9 +233,8 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                 </CardHeader>
                 <CardContent>
                      <p className="text-muted-foreground">{location.address}</p>
-                     {/* Placeholder for map */}
-                     <div className="mt-4 aspect-square w-full bg-muted rounded-lg flex items-center justify-center">
-                         <p className="text-sm text-muted-foreground">Kart kommer her</p>
+                     <div className="mt-4">
+                         <LocationMap address={location.address} />
                      </div>
                 </CardContent>
             </Card>
