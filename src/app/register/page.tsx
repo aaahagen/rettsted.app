@@ -38,7 +38,7 @@ export default function RegisterPage() {
       await setDoc(userDocRef, {
         displayName: name,
         email: email,
-        role: 'driver', // Default role for new users
+        role: 'admin', // Default role for new users
         createdAt: serverTimestamp(),
       });
       
