@@ -18,11 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DeliveryLocation } from '@/lib/types';
 import LoadingSpinner from '../ui/loading-spinner';
-import { useAuthContext } from '@/hooks/use-auth-context';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Navn må ha minst 2 tegn.' }),
@@ -41,7 +41,7 @@ interface LocationFormProps {
 }
 
 export function LocationForm({ location }: LocationFormProps) {
-  const { user, loading } = useAuthContext();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -69,14 +69,14 @@ export function LocationForm({ location }: LocationFormProps) {
         if (locationId) {
             // Update existing location
             const locationRef = doc(db, 'locations', locationId);
-            await updateDoc(locationRef, {
+            await setDoc(locationRef, {
                 ...values,
                 lastUpdatedBy: {
                     uid: user.uid,
                     name: user.displayName || 'Ukjent bruker',
                 },
                 lastUpdatedAt: serverTimestamp(),
-            });
+            }, { merge: true });
         } else {
             // Create new location
             const newLocationRef = await addDoc(collection(db, 'locations'), {
