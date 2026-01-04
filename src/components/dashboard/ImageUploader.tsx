@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ChangeEvent, useRef, useState } from 'react';
@@ -59,10 +60,16 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
       (error) => {
         console.error('Upload error:', error);
         setUploading(false);
+        let description = 'Kunne ikke laste opp bildet. Prøv igjen.';
+        if (error.code === 'storage/unauthorized') {
+            description = 'Du har ikke tilgang til å laste opp. Sjekk Storage-reglene i Firebase.';
+        } else if (error.code === 'storage/unknown') {
+            description = 'En ukjent feil oppstod. Dette kan skyldes CORS-innstillinger. Se konsollen for detaljer.';
+        }
         toast({
           variant: 'destructive',
           title: 'Opplasting feilet',
-          description: 'Kunne ikke laste opp bildet. Prøv igjen.',
+          description: description,
         });
       },
       async () => {
@@ -120,7 +127,7 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
         <div className="flex flex-col items-center gap-2 w-40">
             <div className="flex items-center justify-center gap-2">
                 <LoadingSpinner className="h-4 w-4" />
-                <span className="text-sm text-muted-foreground">Laster opp...</span>
+                <span className="text-sm text-muted-foreground">Laster opp... {Math.round(uploadProgress)}%</span>
             </div>
             <Progress value={uploadProgress} className="w-full h-2" />
         </div>
