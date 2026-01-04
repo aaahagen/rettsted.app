@@ -2,11 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, PlusCircle } from 'lucide-react';
+import { Home, PlusCircle, LogOut, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { RettStedLogo } from '../icons';
 import { UserNav } from './UserNav';
+import { Button } from '../ui/button';
+import { auth } from '@/lib/firebase';
+import { Separator } from '../ui/separator';
 
 const Logo = () => (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
@@ -17,16 +20,22 @@ const Logo = () => (
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
   const router = useRouter();
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Dashbord' },
-    { href: '/dashboard/locations/new', icon: PlusCircle, label: 'Ny Lokasjon' },
+    { href: '/dashboard/locations/new', icon: PlusCircle, label: 'Nytt Sted' },
+    { href: '/', icon: Globe, label: 'Hjem' },
   ];
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return pathname === path;
+    if (path === '/') return pathname === path;
     return pathname.startsWith(path);
   };
   
@@ -50,6 +59,15 @@ export function AppSidebar() {
               {item.label}
             </Link>
           ))}
+           <Separator className="my-2" />
+           <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary justify-start"
+            >
+              <LogOut className="h-4 w-4" />
+              Logg ut
+            </Button>
         </nav>
       </div>
       <div className="mt-auto border-t p-4">
