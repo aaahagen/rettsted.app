@@ -18,10 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DeliveryLocation } from '@/lib/types';
 import LoadingSpinner from '../ui/loading-spinner';
-import { createOrUpdateLocation } from '@/lib/actions';
 import { useAuthContext } from '@/hooks/use-auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Navn må ha minst 2 tegn.' }),
@@ -64,12 +65,43 @@ export function LocationForm({ location }: LocationFormProps) {
     }
     
     try {
-        const result = await createOrUpdateLocation(values, user, location?.id);
+        let locationId = location?.id;
+        if (locationId) {
+            // Update existing location
+            const locationRef = doc(db, 'locations', locationId);
+            await updateDoc(locationRef, {
+                ...values,
+                lastUpdatedBy: {
+                    uid: user.uid,
+                    name: user.displayName || 'Ukjent bruker',
+                },
+                lastUpdatedAt: serverTimestamp(),
+            });
+        } else {
+            // Create new location
+            const newLocationRef = await addDoc(collection(db, 'locations'), {
+                ...values,
+                images: [],
+                createdBy: {
+                    uid: user.uid,
+                    name: user.displayName || 'Ukjent bruker',
+                },
+                createdAt: serverTimestamp(),
+                lastUpdatedBy: {
+                    uid: user.uid,
+                    name: user.displayName || 'Ukjent bruker',
+                },
+                lastUpdatedAt: serverTimestamp(),
+            });
+            locationId = newLocationRef.id;
+        }
+        
         toast({ title: 'Suksess!', description: `Leveringssted ${location ? 'oppdatert' : 'opprettet'}.` });
-        router.push(`/dashboard/locations/${result.id}`);
+        router.push(`/dashboard/locations/${locationId}`);
         router.refresh();
+
     } catch(error) {
-        console.error(error);
+        console.error("Feil ved lagring av lokasjon:", error);
         toast({ variant: 'destructive', title: 'Noe gikk galt', description: 'Kunne ikke lagre endringene.' });
     }
   };
