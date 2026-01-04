@@ -53,14 +53,3 @@ export async function createOrUpdateLocation(
     throw new Error('Could not save location to the database.');
   }
 }
-
-export async function updateUserRole(uid: string, role: 'admin' | 'driver') {
-    try {
-        const userRef = doc(db, 'users', uid);
-        await updateDoc(userRef, { role });
-        return { success: true };
-    } catch(error) {
-        console.error('Error updating user role:', error);
-        throw new Error('Could not update user role.');
-    }
-}
