@@ -75,12 +75,17 @@ export function LocationForm({ location }: LocationFormProps) {
   };
   
   const isSubmitting = form.formState.isSubmitting || loading;
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    form.handleSubmit(onSubmit)();
+  };
 
   return (
     <Card className="w-full max-w-3xl">
       <CardContent className="pt-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                 control={form.control}
