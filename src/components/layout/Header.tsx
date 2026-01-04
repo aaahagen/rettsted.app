@@ -5,17 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UserNav } from './UserNav';
 import { AppSidebar } from './AppSidebar';
-import { RettStedIcon } from '../icons';
+import { RettStedLogo } from '../icons';
 
 const Logo = () => (
     <Link
       href="/dashboard"
       className="flex items-center gap-2 text-lg font-semibold md:text-base"
     >
-      <RettStedIcon className="h-6 w-6" />
-       <span className="text-xl font-bold font-headline text-primary">
-        Rett<span className="text-accent">St</span>ed
-      </span>
+      <RettStedLogo className="h-10 w-auto" />
     </Link>
 );
 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, MapPin, Camera, Users } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { RettStedIcon } from '@/components/icons';
+import { RettStedLogo } from '@/components/icons';
 
 const features = [
   {
@@ -31,10 +31,7 @@ const features = [
 
 const Logo = () => (
     <Link href="#" className="flex items-center justify-center" prefetch={false}>
-        <RettStedIcon className="h-6 w-6" />
-        <span className="ml-2 text-xl font-bold font-headline text-primary">
-            Rett<span className="text-accent">St</span>ed
-        </span>
+        <RettStedLogo className="h-10 w-auto" />
     </Link>
 );
 

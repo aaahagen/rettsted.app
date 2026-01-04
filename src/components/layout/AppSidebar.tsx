@@ -5,15 +5,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { RettStedIcon } from '../icons';
+import { RettStedLogo } from '../icons';
 import { UserNav } from './UserNav';
 
 const Logo = () => (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-      <RettStedIcon className="h-6 w-6" />
-      <span className="text-xl font-bold font-headline text-primary">
-        Rett<span className="text-accent">St</span>ed
-      </span>
+      <RettStedLogo className="h-10 w-auto" />
     </Link>
 );
 

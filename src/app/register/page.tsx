@@ -11,15 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { RettStedIcon } from '@/components/icons';
+import { RettStedLogo } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 
 const Logo = () => (
     <Link href="/" className="flex items-center gap-2 text-foreground">
-        <RettStedIcon className="h-6 w-6" />
-        <span className="text-xl font-bold text-primary">
-            Rett<span className="text-accent">St</span>ed
-        </span>
+        <RettStedLogo className="h-14 w-auto" />
     </Link>
 );
 
