@@ -15,6 +15,7 @@ import { updateUserRole } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 import LocationList from '@/components/dashboard/LocationList';
 
 function UserTableSkeleton() {
@@ -85,74 +86,19 @@ export default function DashboardPage() {
 
     if (currentUser?.role === 'admin') {
         return (
-            <div className="grid gap-6">
-                <h1 className="text-lg font-semibold md:text-2xl font-headline">Adminpanel</h1>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Abonnement</CardTitle>
-                            <CardDescription>Administrer bedriftens abonnement.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground mb-4">Du er på gratisplanen.</p>
-                            <Button disabled>Oppgrader til Pro (Kommer snart)</Button>
-                        </CardContent>
-                    </Card>
-                </div>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Brukeradministrasjon</CardTitle>
-                            <CardDescription>Administrer brukere og deres roller i organisasjonen.</CardDescription>
-                        </div>
-                        <Button size="sm" className="h-8 gap-1" disabled>
+             <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-lg font-semibold md:text-2xl font-headline">Leveringssteder</h1>
+                    <Button asChild size="sm" className="h-8 gap-1">
+                        <Link href="/dashboard/locations/new">
                             <PlusCircle className="h-3.5 w-3.5" />
                             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                Inviter bruker
+                                Nytt Sted
                             </span>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {loading ? <UserTableSkeleton /> : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Navn</TableHead>
-                                        <TableHead className="hidden sm:table-cell">E-post</TableHead>
-                                        <TableHead>Rolle</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map(user => (
-                                        <TableRow key={user.uid}>
-                                            <TableCell className="font-medium">{user.displayName}</TableCell>
-                                            <TableCell className="hidden sm:table-cell">{user.email}</TableCell>
-                                            <TableCell>
-                                                <Select
-                                                    value={user.role}
-                                                    onValueChange={(value: 'admin' | 'driver') => handleRoleChange(user.uid, value)}
-                                                    disabled={user.uid === currentUser.uid}
-                                                >
-                                                    <SelectTrigger className="w-[110px]">
-                                                        <SelectValue placeholder="Velg rolle" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="driver">
-                                                            <Badge variant={user.role === 'driver' ? 'default' : 'secondary'}>Sjåfør</Badge>
-                                                        </SelectItem>
-                                                        <SelectItem value="admin">
-                                                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>Leder</Badge>
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </CardContent>
-                </Card>
+                        </Link>
+                    </Button>
+                </div>
+                <LocationList />
             </div>
         );
     }
