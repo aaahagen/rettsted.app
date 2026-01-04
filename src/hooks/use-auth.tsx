@@ -21,36 +21,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-      if (!user) {
+    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+      setFirebaseUser(authUser);
+      if (authUser) {
+        // If we have an authenticated user, we are still loading until we get their Firestore document.
+        setLoading(true);
+        const userDocRef = doc(db, 'users', authUser.uid);
+        const unsubscribeFirestore = onSnapshot(userDocRef, (doc) => {
+          if (doc.exists()) {
+            setUser({ uid: doc.id, ...doc.data() } as AppUser);
+          } else {
+            // This case might happen if a user is deleted from Firestore but not Auth
+            setUser(null);
+          }
+          setLoading(false); // Loading is false only after Firestore check
+        }, (error) => {
+          console.error("Error fetching user document:", error);
+          setUser(null);
+          setLoading(false);
+        });
+        // Return the firestore unsubscribe function to be called when auth state changes
+        return unsubscribeFirestore;
+      } else {
+        // No authenticated user, so we are not loading and have no user.
         setUser(null);
+        setFirebaseUser(null);
         setLoading(false);
       }
     });
 
     return () => unsubscribeAuth();
   }, []);
-
-  useEffect(() => {
-    if (firebaseUser) {
-      setLoading(true);
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const unsubscribeFirestore = onSnapshot(userDocRef, (doc) => {
-        if (doc.exists()) {
-          setUser({ uid: doc.id, ...doc.data() } as AppUser);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }, (error) => {
-        console.error("Error fetching user document:", error);
-        setUser(null);
-        setLoading(false);
-      });
-      return () => unsubscribeFirestore();
-    }
-  }, [firebaseUser]);
 
   const value = { firebaseUser, user, loading };
 
