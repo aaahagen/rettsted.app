@@ -30,8 +30,6 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // BEVIS-TEST: Midlertidig deaktivert for feilsøking
-      /*
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
 
@@ -40,13 +38,12 @@ export default function RegisterPage() {
       await setDoc(userDocRef, {
         displayName: name,
         email: email,
-        role: 'admin', // Default role for new users
+        role: 'driver', // Default role for new users
         createdAt: serverTimestamp(),
       });
-      */
       
       toast({
-        title: 'Registrering vellykket (Test)',
+        title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
       router.push('/dashboard');
