@@ -73,7 +73,7 @@ export default function RegisterPage() {
            <div className="flex justify-center mb-4">
             <Link href="/" className="flex items-center gap-2 text-foreground">
               <RettStedIcon className="h-6 w-6" />
-              <span className="text-xl font-bold">Rett Sted</span>
+              <span className="text-xl font-bold uppercase">Rett Sted</span>
             </Link>
           </div>
           <CardTitle className="text-2xl text-center">Opprett en konto</CardTitle>

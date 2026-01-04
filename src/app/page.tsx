@@ -37,7 +37,7 @@ export default function Home() {
       <header className="px-4 lg:px-6 h-16 flex items-center bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
         <Link href="#" className="flex items-center justify-center" prefetch={false}>
           <RettStedIcon className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-bold font-headline">Rett Sted</span>
+          <span className="ml-2 text-xl font-bold font-headline uppercase">Rett Sted</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
