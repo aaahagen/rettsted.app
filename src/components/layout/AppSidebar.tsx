@@ -1,16 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, PlusCircle, Shield, Truck } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, LogOut, PlusCircle, Shield, Truck } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { RoutemateIcon } from '../icons';
 import { Button } from '../ui/button';
+import { auth } from '@/lib/firebase';
+import { UserNav } from './UserNav';
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Dashbord' },
@@ -23,15 +31,15 @@ export function AppSidebar() {
   };
   
   return (
-    <div className="flex h-full max-h-screen flex-col gap-2">
+    <div className="flex h-full max-h-screen flex-col">
       <div className="flex h-16 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <RoutemateIcon className="h-6 w-6 text-primary" />
           <span className="font-bold font-headline">Routemate</span>
         </Link>
       </div>
-      <div className="flex-1">
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+      <div className="flex-1 overflow-y-auto">
+        <nav className="grid items-start px-2 text-sm font-medium lg:px-4 mt-4">
           {navItems.map((item) => (
             <Link
               key={item.label}
@@ -46,6 +54,11 @@ export function AppSidebar() {
             </Link>
           ))}
         </nav>
+      </div>
+      <div className="mt-auto border-t p-4">
+        <div className="flex items-center justify-between">
+           <UserNav />
+        </div>
       </div>
     </div>
   );
