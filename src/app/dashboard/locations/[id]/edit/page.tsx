@@ -1,42 +1,68 @@
+'use client';
+
 import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { LocationForm } from "@/components/dashboard/LocationForm";
 import type { DeliveryLocation } from "@/lib/types";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
-async function getLocation(id: string): Promise<DeliveryLocation | null> {
-  const docRef = doc(db, "locations", id);
-  const docSnap = await getDoc(docRef);
+export default function EditLocationPage({ params }: { params: { id: string } }) {
+  const [location, setLocation] = useState<DeliveryLocation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const router = useRouter();
 
-  if (!docSnap.exists()) {
-    return null;
+  useEffect(() => {
+    async function getLocation() {
+      try {
+        const docRef = doc(db, "locations", params.id);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+          setError(true);
+          return;
+        }
+        
+        const data = docSnap.data();
+        setLocation({
+            id: docSnap.id,
+            ...data,
+            createdAt: (data.createdAt as Timestamp),
+            lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
+        } as DeliveryLocation);
+
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    getLocation();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+        <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-96 w-full" />
+        </div>
+    );
   }
-  const data = docSnap.data();
-  // Firestore timestamps need to be converted to a serializable format for client components
-  const serializableData = {
-      ...data,
-      createdAt: data.createdAt.toDate().toISOString(),
-      lastUpdatedAt: data.lastUpdatedAt ? data.lastUpdatedAt.toDate().toISOString() : undefined,
-  };
-  
-  return {
-      id: docSnap.id,
-      ...data,
-      createdAt: data.createdAt as Timestamp,
-      lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
-  } as DeliveryLocation;
-}
 
-
-export default async function EditLocationPage({ params }: { params: { id: string } }) {
-  const location = await getLocation(params.id);
-
-  if (!location) {
+  if (error) {
     notFound();
+  }
+  
+  if (!location) {
+      return notFound();
   }
 
   return (

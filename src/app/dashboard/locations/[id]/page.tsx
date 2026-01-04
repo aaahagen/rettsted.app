@@ -1,7 +1,9 @@
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+'use client';
+
+import { doc, getDoc, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { DeliveryLocation } from "@/lib/types";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Edit, Clock, User, Image as ImageIcon, Navigation, ParkingCircle, Truck, Info, Hourglass } from "lucide-react";
@@ -11,25 +13,11 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-async function getLocation(id: string): Promise<DeliveryLocation | null> {
-  const docRef = doc(db, "locations", id);
-  const docSnap = await getDoc(docRef);
 
-  if (!docSnap.exists()) {
-    return null;
-  }
-  const data = docSnap.data();
-  // Firestore timestamps need to be converted to a serializable format
-  return {
-      id: docSnap.id,
-      ...data,
-      createdAt: (data.createdAt as Timestamp),
-      lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
-  } as DeliveryLocation;
-}
-
-const InfoCard = ({ icon, title, content }: { icon: React.ReactNode, title: string, content?: string }) => {
+const InfoCard = ({ icon, title, content }: { icon: React.ReactNode, title: string, content?: string | null }) => {
     if (!content) return null;
     return (
         <div className="flex items-start gap-4">
@@ -42,8 +30,111 @@ const InfoCard = ({ icon, title, content }: { icon: React.ReactNode, title: stri
     );
 }
 
-export default async function LocationDetailPage({ params }: { params: { id: string } }) {
-  const location = await getLocation(params.id);
+function LocationDetailSkeleton() {
+    return (
+        <div className="max-w-5xl mx-auto">
+            <div className="flex items-center gap-4 mb-6">
+                <Skeleton className="h-7 w-7 rounded-full" />
+                <Skeleton className="h-7 w-48" />
+                <div className="flex-1" />
+                <Skeleton className="h-9 w-24" />
+            </div>
+             <div className="grid gap-8 md:grid-cols-3">
+                <div className="md:col-span-2 grid gap-8">
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-7 w-40" />
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                           {[...Array(5)].map((_, i) => (
+                             <div className="flex items-start gap-4" key={i}>
+                                <Skeleton className="h-6 w-6 mt-1 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-5 w-24" />
+                                    <Skeleton className="h-4 w-64" />
+                                </div>
+                            </div>
+                           ))}
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                             <Skeleton className="h-7 w-32" />
+                        </CardHeader>
+                        <CardContent>
+                           <Skeleton className="w-full aspect-video" />
+                        </CardContent>
+                    </Card>
+                </div>
+                 <div className="md:col-span-1 space-y-8">
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-7 w-24" />
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-5 w-48 mb-2" />
+                            <Skeleton className="aspect-square w-full" />
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <Skeleton className="h-7 w-20" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                           <div className="flex items-center gap-3">
+                                <Skeleton className="h-4 w-4" />
+                                <div className="space-y-1">
+                                     <Skeleton className="h-4 w-32" />
+                                     <Skeleton className="h-3 w-24" />
+                                </div>
+                           </div>
+                           <div className="flex items-center gap-3">
+                                <Skeleton className="h-4 w-4" />
+                                <div className="space-y-1">
+                                     <Skeleton className="h-4 w-32" />
+                                     <Skeleton className="h-3 w-24" />
+                                </div>
+                           </div>
+                        </CardContent>
+                    </Card>
+                 </div>
+             </div>
+        </div>
+    )
+}
+
+export default function LocationDetailPage({ params }: { params: { id: string } }) {
+  const [location, setLocation] = useState<DeliveryLocation | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const docRef = doc(db, "locations", params.id);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setLocation({
+            id: docSnap.id,
+            ...data,
+            createdAt: (data.createdAt as Timestamp),
+            lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
+        } as DeliveryLocation);
+      } else {
+        // Handle case where document doesn't exist
+        setLocation(null);
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching location:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [params.id]);
+
+
+  if (loading) {
+    return <LocationDetailSkeleton />;
+  }
 
   if (!location) {
     notFound();
@@ -156,7 +247,7 @@ export default async function LocationDetailPage({ params }: { params: { id: str
                             <p className="text-muted-foreground">{format(location.createdAt.toDate(), "d. MMMM yyyy", { locale: nb })}</p>
                         </div>
                     </div>
-                    {location.lastUpdatedBy && (
+                    {location.lastUpdatedBy && location.lastUpdatedAt && (
                         <div className="flex items-center gap-3">
                             <Edit className="h-4 w-4 text-muted-foreground" />
                              <div>
