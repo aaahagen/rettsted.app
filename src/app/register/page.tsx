@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { RettStedLogo } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, writeBatch } from 'firebase/firestore';
 
 const Logo = () => (
     <Link href="/" className="flex items-center gap-2 text-foreground">
@@ -25,12 +25,21 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!organizationName) {
+        toast({
+            variant: 'destructive',
+            title: 'Mangler organisasjonsnavn',
+            description: 'Vennligst fyll ut navnet på organisasjonen.',
+        });
+        return;
+    }
     setIsLoading(true);
 
     try {
@@ -41,30 +50,49 @@ export default function RegisterPage() {
       // 2. Update Firebase Auth profile
       await updateProfile(user, { displayName: name });
       
-      // 3. Create user document in Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      // 3. Create organization and user document in a single, atomic operation
+      const batch = writeBatch(db);
+
+      // Create a new organization document
+      const orgRef = doc(db, 'organizations', user.uid); // Using user's UID for simplicity as org ID
+      batch.set(orgRef, {
+        name: organizationName,
+        ownerId: user.uid,
+        createdAt: new Date(),
+      });
+
+      // Create the user document and link it to the organization
+      const userRef = doc(db, "users", user.uid);
+      batch.set(userRef, {
         uid: user.uid,
         displayName: name,
         email: user.email,
-        role: 'driver' // Default role
+        role: 'admin', // The user who registers the org is the admin
+        organizationId: user.uid, // Linking user to the new organization
+        organizationName: organizationName,
       });
+
+      // Commit the batch
+      await batch.commit();
       
       toast({
         title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
       
+      // Force refresh the token to get custom claims if they were set by a function (future proofing)
+      await user.getIdToken(true);
       router.push('/dashboard');
 
-    } catch (error: any) {
+    } catch (error: any) => {
       console.error("Registreringsfeil:", error);
       let errorMessage = 'En ukjent feil oppstod. Prøv igjen.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'Denne e-postadressen er allerede i bruk.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Passordet er for svakt. Bruk minst 6 tegn.';
-      } else if (error.code === 'permission-denied') {
-        errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Sjekk sikkerhetsregler.'
+      } else if (error.code === 'permission-denied' || error.code === 'firestore/permission-denied') {
+        errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Dette er en sikkerhetsregel-feil.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -89,13 +117,25 @@ export default function RegisterPage() {
           </div>
           <CardTitle className="text-2xl text-center">Opprett en konto</CardTitle>
           <CardDescription className="text-center">
-            Fyll inn detaljene under for å komme i gang.
+            Fyll inn detaljene under for å komme i gang med din organisasjon.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="grid gap-4">
+             <div className="grid gap-2">
+              <Label htmlFor="organizationName">Navn på organisasjon</Label>
+              <Input 
+                id="organizationName" 
+                placeholder="Raske Gutter AS" 
+                required
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">Fullt navn</Label>              <Input 
+              <Label htmlFor="name">Ditt fulle navn</Label>
+              <Input 
                 id="name" 
                 placeholder="Ola Normann" 
                 required
@@ -128,7 +168,7 @@ export default function RegisterPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <LoadingSpinner /> : 'Opprett konto'}
+              {isLoading ? <LoadingSpinner /> : 'Opprett konto og organisasjon'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

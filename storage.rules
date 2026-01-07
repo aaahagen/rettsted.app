@@ -1,10 +1,17 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // Only allow users to upload images to a location if they are part of the same organization
+    match /locations/{locationId}/{imageId} {
+      allow write: if request.auth != null && 
+                    exists(/databases/$(database)/documents/locations/$(locationId)) &&
+                    get(/databases/$(database)/documents/locations/$(locationId)).data.organizationId == request.auth.token.organizationId;
+    }
+
+    // Allow reads if the user is authenticated
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
     }
   }
 }

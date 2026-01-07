@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/use-auth';
 import { UploadCloud } from 'lucide-react';
 import LoadingSpinner from '../ui/loading-spinner';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface ImageUploaderProps {
   locationId: string;
@@ -111,26 +112,42 @@ export default function ImageUploader({ locationId }: ImageUploaderProps) {
   }
 
   return (
-    <div>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        accept="image/png, image/jpeg, image/gif, image/webp"
-        disabled={uploading}
-      />
-      {uploading ? (
-        <Button variant="secondary" disabled>
-            <LoadingSpinner className="mr-2 h-4 w-4" />
-            Laster opp...
-        </Button>
-      ) : (
-        <Button variant="secondary" onClick={handleButtonClick}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="secondary">
           <UploadCloud className="mr-2 h-4 w-4" />
           Last opp bilde
         </Button>
-      )}
-    </div>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Last opp et nytt bilde</DialogTitle>
+          <DialogDescription>
+            Velg et bilde fra enheten din for å legge det til i galleriet for dette leveringsstedet.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/png, image/jpeg, image/gif, image/webp"
+            disabled={uploading}
+          />
+          {uploading ? (
+            <Button variant="secondary" disabled className="w-full">
+                <LoadingSpinner className="mr-2 h-4 w-4" />
+                Laster opp...
+            </Button>
+          ) : (
+            <Button variant="secondary" onClick={handleButtonClick} className="w-full">
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Velg bilde
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, type IdTokenResult, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { AppUser } from '@/lib/types';
@@ -9,54 +9,63 @@ import type { AppUser } from '@/lib/types';
 export interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
+  claims: IdTokenResult['claims'] | null;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
+  const [claims, setClaims] = useState<IdTokenResult['claims'] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+    const handleUser = (authUser: FirebaseUser | null) => {
+      setLoading(true);
+
       if (authUser) {
-        // If we have an auth user, we are loading until we get the Firestore doc.
-        setLoading(true);
+        // Use onSnapshot to listen for the document creation/update in real-time
         const userDocRef = doc(db, 'users', authUser.uid);
-        
-        const unsubscribeFirestore = onSnapshot(userDocRef, (doc) => {
+        const unsubscribe = onSnapshot(userDocRef, async (doc) => {
           if (doc.exists()) {
-            // We got the user document, set the user and stop loading.
+            const tokenResult = await authUser.getIdTokenResult(true);
+            setClaims(tokenResult.claims);
             setUser({ uid: doc.id, ...doc.data() } as AppUser);
             setLoading(false);
           } else {
-            // This case might happen if a user is deleted from Firestore but not Auth.
-            // Or on first registration before doc is created.
-            // We'll clear the user and let the AuthGuard handle it.
-            setUser(null);
-            setLoading(false); 
+            // This case can happen during registration before the user doc is created.
+            // We set loading to false but user to null. The registration flow should handle the redirect.
+            // For a normal login, if the doc is missing, it's an error state.
+             console.warn(`User document for ${authUser.uid} not found.`);
+             setUser(null);
+             setClaims(null);
+             setLoading(false);
           }
         }, (error) => {
-          console.error("Error fetching user document:", error);
+          console.error("Firestore snapshot error:", error);
           setUser(null);
+          setClaims(null);
           setLoading(false);
         });
+        
+        // Return the cleanup function for the snapshot listener
+        return unsubscribe;
 
-        // This is returned by onAuthStateChanged to clean up the Firestore listener 
-        // when the auth state changes again.
-        return unsubscribeFirestore;
       } else {
-        // No authenticated user, so we are not loading and have no user.
+        // No authenticated user from Firebase Auth
         setUser(null);
+        setClaims(null);
         setLoading(false);
       }
-    });
+    };
 
-    // Cleanup the auth subscription on unmount
+    const unsubscribeAuth = onAuthStateChanged(auth, handleUser);
+
+    // Cleanup function for the auth state listener
     return () => unsubscribeAuth();
-  }, []);
+  }, []); // <-- The dependency array is now empty
 
-  const value = { user, loading };
+  const value = { user, loading, claims };
 
   return (
     <AuthContext.Provider value={value}>
