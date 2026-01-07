@@ -3,9 +3,8 @@
 import { doc, Timestamp, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { DeliveryLocation } from "@/lib/types";
-import { notFound, useRouter, useParams } from "next/navigation"; // Bruker useParams hook
+import { notFound, useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { ArrowLeft, Edit, Clock, User, Image as ImageIcon, Navigation, ParkingCircle, Truck, Info, Hourglass, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NextImage from 'next/image';
@@ -109,7 +108,7 @@ function LocationDetailSkeleton() {
 }
 
 export default function LocationDetailPage() {
-  const params = useParams(); // Bruker useParams for å hente ID trygt
+  const params = useParams();
   const id = params.id as string;
   const [location, setLocation] = useState<DeliveryLocation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,13 +118,8 @@ export default function LocationDetailPage() {
   const genericLocationImage = PlaceHolderImages.find(p => p.id === 'generic-location');
 
   useEffect(() => {
-    if (!id || !user) {
-        if (!user && !loading) {
-             setLoading(false);
-             setLocation(null);
-        }
-        return;
-    }
+    if (!id || !user) return;
+    
     const docRef = doc(db, "locations", id);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().organizationId === user.organizationId) {
@@ -133,8 +127,8 @@ export default function LocationDetailPage() {
         setLocation({
             id: docSnap.id,
             ...data,
-            createdAt: (data.createdAt as Timestamp),
-            lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
+            createdAt: data.createdAt as Timestamp,
+            lastUpdatedAt: data.lastUpdatedAt as Timestamp,
         } as DeliveryLocation);
       } else {
         setLocation(null);
@@ -143,7 +137,6 @@ export default function LocationDetailPage() {
     }, (error) => {
       console.error("Error fetching location:", error);
       setLoading(false);
-      setLocation(null);
     });
 
     return () => unsubscribe();
@@ -178,21 +171,34 @@ export default function LocationDetailPage() {
     return notFound();
   }
   
-  const images = location.images && location.images.length > 0
-    ? location.images
-    : genericLocationImage
-      ? [{ id: 'placeholder', url: genericLocationImage.imageUrl, caption: genericLocationImage.description, uploadedBy: '', uploadedAt: Timestamp.now() }]
-      : [];
+  const images = [...(location.images || [])].sort((a, b) => {
+      const timeA = a.uploadedAt?.toMillis() || 0;
+      const timeB = b.uploadedAt?.toMillis() || 0;
+      return timeB - timeA;
+  });
+
+  if (images.length === 0 && genericLocationImage) {
+      images.push({ 
+          id: 'placeholder', 
+          url: genericLocationImage.imageUrl, 
+          caption: 'Ingen bilder lastet opp ennå', 
+          uploadedBy: '', 
+          uploadedAt: Timestamp.now() 
+      });
+  }
 
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center gap-2 mb-6">
-        <Button variant="outline" size="icon" className="h-7 w-7" asChild>
-          <Link href="/dashboard">
+        <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-7 w-7" 
+            onClick={() => router.push('/dashboard')}
+        >
             <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Back</span>
-          </Link>
+            <span className="sr-only">Tilbake</span>
         </Button>
         <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0 font-headline">
           {location.name}
@@ -206,10 +212,8 @@ export default function LocationDetailPage() {
             )}
         </div>
         <div className="flex items-center gap-2">
-            <Button asChild>
-                <Link href={`/dashboard/locations/${location.id}/edit`}>
-                    <Edit className="h-4 w-4 mr-2" /> Rediger
-                </Link>
+            <Button onClick={() => router.push(`/dashboard/locations/${location.id}/edit`)}>
+                <Edit className="h-4 w-4 mr-2" /> Rediger
             </Button>
 
             <AlertDialog>
@@ -254,13 +258,13 @@ export default function LocationDetailPage() {
                     <CardTitle className="font-headline">Bildegalleri</CardTitle>
                 </CardHeader>
                 <CardContent>
-                   <div className="space-y-4">
+                   <div className="space-y-6">
                       <Carousel className="w-full">
                           <CarouselContent>
                               {images.map((image, index) => (
                                   <CarouselItem key={image.id || index}>
                                       <div className="p-1">
-                                          <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted">
+                                          <div className="aspect-video relative w-full rounded-lg overflow-hidden bg-muted border">
                                              <NextImage 
                                                 src={image.url} 
                                                 alt={image.caption || `Bilde ${index + 1}`} 
@@ -270,20 +274,20 @@ export default function LocationDetailPage() {
                                                 priority={index === 0}
                                                 />
                                           </div>
-                                          {image.caption && image.id !== 'placeholder' && <p className="text-sm text-muted-foreground mt-2 text-center">{image.caption}</p>}
+                                          {image.caption && <p className="text-sm text-muted-foreground mt-3 text-center italic">{image.caption}</p>}
                                       </div>
                                   </CarouselItem>
                               ))}
                           </CarouselContent>
                           {images.length > 1 && (
                             <>
-                                <CarouselPrevious />
-                                <CarouselNext />
+                                <CarouselPrevious className="left-2" />
+                                <CarouselNext className="right-2" />
                             </>
                           )}
                       </Carousel>
                        {location && (
-                        <div className="border-t pt-4 flex justify-center">
+                        <div className="border-t pt-6 flex justify-center">
                             <ImageUploader locationId={location.id} />
                         </div>
                        )}
@@ -298,8 +302,8 @@ export default function LocationDetailPage() {
                     <CardTitle className="font-headline">Adresse</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <p className="text-muted-foreground">{location.address}</p>
-                     <div className="mt-4 aspect-square w-full rounded-lg overflow-hidden">
+                     <p className="text-muted-foreground mb-4">{location.address}</p>
+                     <div className="aspect-square w-full rounded-lg overflow-hidden border">
                          <LocationMap address={location.address} />
                      </div>
                 </CardContent>
@@ -312,7 +316,7 @@ export default function LocationDetailPage() {
                     <div className="flex items-center gap-3">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <div>
-                            <p>Opprettet av {location.createdBy.name}</p>
+                            <p>Opprettet av {location.createdBy?.name || 'System'}</p>
                             <p className="text-muted-foreground">{location.createdAt && format(location.createdAt.toDate(), "d. MMMM yyyy", { locale: nb })}</p>
                         </div>
                     </div>

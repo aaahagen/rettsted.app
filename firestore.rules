@@ -2,57 +2,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isUser(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Checks if the user's custom claim matches the document's organizationId
+    // Checks if the user is the owner of the document (matching UID)
+    // or if they have a matching organizationId in their token.
     function isMemberOf(orgId) {
-      return isSignedIn() && request.auth.token.organizationId == orgId;
+      return isSignedIn() && (
+        request.auth.token.organizationId == orgId || 
+        request.auth.uid == orgId
+      );
     }
 
-    // --- RULES ---
-
-    // USERS collection
+    // Rules for the 'users' collection
     match /users/{userId} {
-      // A user can create their own document.
-      // A user can read their own document.
-      allow read, create: if isUser(userId);
-      // No one can update or delete user profiles from the client.
+      allow read, create: if isSignedIn() && request.auth.uid == userId;
       allow update, delete: if false;
     }
 
-    // ORGANIZATIONS collection
+    // Rules for the 'organizations' collection
     match /organizations/{orgId} {
-      // A user can create an organization, but only if the orgId is their own UID.
-      allow create: if isUser(orgId);
-      // A user can read their own organization's document.
+      allow create: if isSignedIn() && request.auth.uid == orgId;
       allow read: if isMemberOf(orgId);
-      // Only the organization owner can update its details.
-      allow update: if isUser(resource.data.ownerId);
-      // No one can delete an organization from the client.
+      allow update: if isSignedIn() && (resource.data.ownerId == request.auth.uid || request.auth.uid == orgId);
       allow delete: if false;
     }
 
-    // LOCATIONS collection
+    // Rules for the 'locations' collection
     match /locations/{locationId} {
-      // To get a single location, user must be a member of that location's org.
+      
+      // GET: Allow if user belongs to the organization
       allow get: if isMemberOf(resource.data.organizationId);
 
-      // To list locations, the query MUST be filtered by the user's organizationId.
-      // This prevents listing locations from other orgs.
-      allow list: if isSignedIn() && request.query.where.get('organizationId')[2] == request.auth.token.organizationId;
+      // LIST: Allow if the query is filtered by an organization the user belongs to.
+      // We check both the token claim and the UID as a fallback for stability.
+      allow list: if isSignedIn() && (
+        request.query.where.get('organizationId')[2] == request.auth.token.organizationId ||
+        request.query.where.get('organizationId')[2] == request.auth.uid
+      );
       
-      // To create/update a location, user must be a member of the org they are writing to.
-      allow create, update: if isMemberOf(request.resource.data.organizationId);
+      // WRITE: Allow if user is part of the organization they are writing to.
+      allow create, update, delete: if isMemberOf(request.resource.data.organizationId || resource.data.organizationId);
+    }
 
-      // To delete a location, user must be a member of that location's org.
-      allow delete: if isMemberOf(resource.data.organizationId);
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

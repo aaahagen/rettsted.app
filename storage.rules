@@ -1,8 +1,20 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Temporarily allow any authenticated user to read and write.
-    // This is for troubleshooting the "hanging" upload issue.
+
+    // Rules for location-specific images
+    match /locations/{locationId}/{imageId} {
+      
+      // Allow read access to any authenticated user
+      // (You can tighten this later to only organization members)
+      allow read: if request.auth != null;
+
+      // Allow write access if the user is authenticated.
+      // This matches the path used in ImageUploader.tsx
+      allow write: if request.auth != null;
+    }
+
+    // Fallback rule for other paths
     match /{allPaths=**} {
       allow read, write: if request.auth != null;
     }

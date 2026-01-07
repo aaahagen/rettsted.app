@@ -22,7 +22,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Navn må ha minst 2 tegn.' }),
@@ -41,7 +41,7 @@ interface LocationFormProps {
 }
 
 export function LocationForm({ location }: LocationFormProps) {
-  const { user, claims, loading } = useAuth(); // Get claims from auth context
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,23 +59,33 @@ export function LocationForm({ location }: LocationFormProps) {
   });
 
   const onSubmit = async (values: LocationFormValues) => {
-    // Ensure user and organizationId from claims are available
-    if (!user || !claims?.organizationId) {
-        toast({ 
-            variant: 'destructive', 
-            title: 'Autentiseringsfeil.',
-            description: 'Kunne ikke verifisere din organisasjonstilhørighet.'
-        });
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Du må være logget inn.' });
         return;
     }
     
     try {
+        // NEW ROBUST APPROACH: Get the organization ID directly from the user document
+        // to be absolutely sure we link the location correctly.
+        const userDocRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userDocRef);
+        
+        if (!userSnap.exists()) {
+            throw new Error("Fant ikke din brukerprofil i databasen.");
+        }
+        
+        const userData = userSnap.data();
+        const orgId = userData.organizationId;
+        const orgName = userData.organizationName || '';
+
+        if (!orgId) {
+            throw new Error("Din bruker er ikke tilknyttet noen organisasjon.");
+        }
+
         let locationId = location?.id;
-        const orgId = claims.organizationId as string;
-        const orgName = user.organizationName || '';
 
         if (locationId) {
-            // Update existing location
+            // Update
             const locationRef = doc(db, 'locations', locationId);
             await setDoc(locationRef, {
                 ...values,
@@ -86,10 +96,10 @@ export function LocationForm({ location }: LocationFormProps) {
                 lastUpdatedAt: serverTimestamp(),
             }, { merge: true });
         } else {
-            // Create new location, now with organizationId and organizationName
+            // Create
             const newLocationRef = await addDoc(collection(db, 'locations'), {
                 ...values,
-                organizationId: orgId,
+                organizationId: orgId, // Verifisert ID
                 organizationName: orgName,
                 images: [],
                 createdBy: {
@@ -105,24 +115,23 @@ export function LocationForm({ location }: LocationFormProps) {
         router.push(`/dashboard/locations/${locationId}`);
         router.refresh();
 
-    } catch(error) {
-        console.error("Error saving location:", error);
-        toast({ variant: 'destructive', title: 'Noe gikk galt', description: 'Kunne ikke lagre endringene. Sjekk konsollen for feil.' });
+    } catch(error: any) {
+        console.error("Feil ved lagring:", error);
+        toast({ 
+            variant: 'destructive', 
+            title: 'Kunne ikke lagre', 
+            description: error.message || 'En ukjent feil oppstod.' 
+        });
     }
   };
   
-  const isSubmitting = form.formState.isSubmitting || loading;
+  const isSubmitting = form.formState.isSubmitting || authLoading;
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    form.handleSubmit(onSubmit)();
-  };
-
   return (
-    <Card className="w-full max-w-3xl">
-      <CardContent className="pt-6">
+    <Card className="w-full max-w-3xl border-none shadow-none bg-transparent">
+      <CardContent className="p-0">
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                 control={form.control}
@@ -161,9 +170,6 @@ export function LocationForm({ location }: LocationFormProps) {
                   <FormControl>
                     <Input placeholder="F.eks. Man-Fre 08:00-16:00" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Når er det mulig å levere varer?
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -178,9 +184,6 @@ export function LocationForm({ location }: LocationFormProps) {
                   <FormControl>
                     <Textarea placeholder="Beskriv veien inn til leveringspunktet..." {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Er det spesielle kjøreruter, trange gater eller andre hindringer?
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -195,9 +198,6 @@ export function LocationForm({ location }: LocationFormProps) {
                   <FormControl>
                     <Textarea placeholder="Hvor kan man parkere under levering?" {...field} />
                   </FormControl>
-                   <FormDescription>
-                    Er det dedikerte plasser, fare for bot, eller andre ting å vite?
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -212,9 +212,6 @@ export function LocationForm({ location }: LocationFormProps) {
                   <FormControl>
                     <Textarea placeholder="Detaljer om selve varemottaket..." {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Hvor er døren? Trengs det nøkkelkort? Hvem skal man kontakte?
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -229,18 +226,16 @@ export function LocationForm({ location }: LocationFormProps) {
                   <FormControl>
                     <Textarea placeholder="Er det noe annet man bør vite?" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Stilleområder, spesielle tider, etc.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-2">
-                <Button variant="outline" type="button" onClick={() => router.back()}>Avbryt</Button>
+            <div className="flex justify-end gap-3 border-t pt-6">
+                <Button variant="outline" type="button" onClick={() => router.back()} disabled={isSubmitting}>Avbryt</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <LoadingSpinner /> : (location ? 'Lagre endringer' : 'Opprett sted')}
+                  {isSubmitting ? <LoadingSpinner className="mr-2 h-4 w-4" /> : null}
+                  {location ? 'Lagre endringer' : 'Opprett sted'}
                 </Button>
             </div>
           </form>

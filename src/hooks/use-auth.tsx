@@ -15,72 +15,70 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [claims, setClaims] = useState<IdTokenResult['claims'] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<{
+      user: AppUser | null;
+      claims: IdTokenResult['claims'] | null;
+      loading: boolean;
+  }>({
+      user: null,
+      claims: null,
+      loading: true
+  });
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
       if (authUser) {
-        // A user is authenticated in Firebase. We are now in a loading state
-        // until we can confirm their full profile from the database.
-        setLoading(true);
+        setAuthState(prev => ({ ...prev, loading: true }));
         const userDocRef = doc(db, 'users', authUser.uid);
 
         let registrationTimeout: NodeJS.Timeout | null = null;
 
         const unsubscribeFirestore = onSnapshot(userDocRef, async (doc) => {
-          // If a timeout was set, clear it now because we've received a database event.
           if (registrationTimeout) clearTimeout(registrationTimeout);
 
           if (doc.exists()) {
-            // The user document exists. This is a fully authenticated and valid user.
-            const tokenResult = await authUser.getIdTokenResult(true);
-            setUser({ uid: doc.id, ...doc.data() } as AppUser);
-            setClaims(tokenResult.claims);
-            setLoading(false);
+            // CRITICAL FIX: Fetch token and document data, then update state ATOMICALLY.
+            try {
+                const tokenResult = await authUser.getIdTokenResult(true);
+                const userData = { uid: doc.id, ...doc.data() } as AppUser;
+                
+                // One single state update prevents partial information from reaching components.
+                setAuthState({
+                    user: userData,
+                    claims: tokenResult.claims,
+                    loading: false
+                });
+            } catch (error) {
+                console.error("Error updating auth state:", error);
+                setAuthState({ user: null, claims: null, loading: false });
+            }
           } else {
-            // The user document does NOT exist. This is the critical "race condition" state
-            // that happens during registration.
-            console.warn(`User document for ${authUser.uid} not found. Waiting for creation...`);
-            
-            // We will wait for 5 seconds for the document to be created by the server action.
-            // If it's not created by then, we assume the registration failed and log the user out.
+            // Wait for registration if doc doesn't exist yet
             registrationTimeout = setTimeout(() => {
-              console.error("Timeout: User document was not created. Logging user out for safety.");
-              setUser(null);
-              setClaims(null);
-              setLoading(false);
+              console.error("Timeout waiting for user document.");
+              setAuthState({ user: null, claims: null, loading: false });
             }, 5000);
           }
         }, (error) => {
           console.error("Firestore listener error:", error);
-          setUser(null);
-          setClaims(null);
-          setLoading(false);
+          setAuthState({ user: null, claims: null, loading: false });
         });
 
-        return () => { // Cleanup function for the Firestore listener
+        return () => {
           if (registrationTimeout) clearTimeout(registrationTimeout);
           unsubscribeFirestore();
         };
 
       } else {
-        // No user is authenticated in Firebase.
-        setUser(null);
-        setClaims(null);
-        setLoading(false);
+        setAuthState({ user: null, claims: null, loading: false });
       }
     });
 
-    // Cleanup function for the main auth state listener
     return () => unsubscribeAuth();
-  }, []); // Empty dependency array ensures this runs only once on mount.
-
-  const value = { user, loading, claims };
+  }, []);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={authState}>
       {children}
     </AuthContext.Provider>
   );
