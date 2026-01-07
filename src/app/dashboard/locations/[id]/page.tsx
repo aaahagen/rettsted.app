@@ -3,7 +3,7 @@
 import { doc, Timestamp, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { DeliveryLocation } from "@/lib/types";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, useParams } from "next/navigation"; // Bruker useParams hook
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Edit, Clock, User, Image as ImageIcon, Navigation, ParkingCircle, Truck, Info, Hourglass, Trash2 } from "lucide-react";
@@ -108,7 +108,9 @@ function LocationDetailSkeleton() {
     )
 }
 
-export default function LocationDetailPage({ params }: { params: { id: string } }) {
+export default function LocationDetailPage() {
+  const params = useParams(); // Bruker useParams for å hente ID trygt
+  const id = params.id as string;
   const [location, setLocation] = useState<DeliveryLocation | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -117,12 +119,14 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
   const genericLocationImage = PlaceHolderImages.find(p => p.id === 'generic-location');
 
   useEffect(() => {
-    if (!params.id || !user) {
-        setLoading(false);
-        setLocation(null);
+    if (!id || !user) {
+        if (!user && !loading) {
+             setLoading(false);
+             setLocation(null);
+        }
         return;
     }
-    const docRef = doc(db, "locations", params.id);
+    const docRef = doc(db, "locations", id);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().organizationId === user.organizationId) {
         const data = docSnap.data();
@@ -133,7 +137,7 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
             lastUpdatedAt: data.lastUpdatedAt ? (data.lastUpdatedAt as Timestamp) : undefined,
         } as DeliveryLocation);
       } else {
-        setLocation(null); // Not found or not authorized
+        setLocation(null);
       }
       setLoading(false);
     }, (error) => {
@@ -143,7 +147,7 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
     });
 
     return () => unsubscribe();
-  }, [params.id, user]);
+  }, [id, user]);
 
 
   const handleDelete = async () => {
@@ -260,7 +264,8 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                                              <NextImage 
                                                 src={image.url} 
                                                 alt={image.caption || `Bilde ${index + 1}`} 
-                                                fill 
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                                 style={{ objectFit: 'cover' }} 
                                                 priority={index === 0}
                                                 />
@@ -308,7 +313,7 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
                         <User className="h-4 w-4 text-muted-foreground" />
                         <div>
                             <p>Opprettet av {location.createdBy.name}</p>
-                            <p className="text-muted-foreground">{format(location.createdAt.toDate(), "d. MMMM yyyy", { locale: nb })}</p>
+                            <p className="text-muted-foreground">{location.createdAt && format(location.createdAt.toDate(), "d. MMMM yyyy", { locale: nb })}</p>
                         </div>
                     </div>
                     {location.lastUpdatedBy && location.lastUpdatedAt && (

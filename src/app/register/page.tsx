@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,14 +12,13 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { RettStedLogo } from '@/components/icons';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { setDoc, doc, writeBatch } from 'firebase/firestore';
+import { registerAndCreateOrg } from '@/lib/actions'; // Import the server action
 
 const Logo = () => (
     <Link href="/" className="flex items-center gap-2 text-foreground">
         <RettStedLogo className="h-14 w-auto" />
     </Link>
 );
-
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,57 +42,43 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 1. Create user in Firebase Auth
+      // Step 1: Create the user in Firebase Authentication on the client-side.
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Update Firebase Auth profile
+      // Step 2: Update the user's display name in Firebase Auth.
       await updateProfile(user, { displayName: name });
       
-      // 3. Create organization and user document in a single, atomic operation
-      const batch = writeBatch(db);
-
-      // Create a new organization document
-      const orgRef = doc(db, 'organizations', user.uid); // Using user's UID for simplicity as org ID
-      batch.set(orgRef, {
-        name: organizationName,
-        ownerId: user.uid,
-        createdAt: new Date(),
-      });
-
-      // Create the user document and link it to the organization
-      const userRef = doc(db, "users", user.uid);
-      batch.set(userRef, {
+      // Step 3: Call the server action to perform secure operations.
+      // This will create the Firestore documents and set the critical custom claim.
+      const result = await registerAndCreateOrg({
         uid: user.uid,
-        displayName: name,
-        email: user.email,
-        role: 'admin', // The user who registers the org is the admin
-        organizationId: user.uid, // Linking user to the new organization
+        email: user.email!,
+        name: name,
         organizationName: organizationName,
       });
 
-      // Commit the batch
-      await batch.commit();
+      if (!result.success) {
+        throw new Error(result.error || 'En ukjent serverfeil oppstod.');
+      }
       
       toast({
         title: 'Registrering vellykket',
         description: 'Videresender til dashbord...',
       });
       
-      // Force refresh the token to get custom claims if they were set by a function (future proofing)
+      // Force a token refresh to ensure the new custom claims are applied immediately.
       await user.getIdToken(true);
       router.push('/dashboard');
 
-    } catch (error: any) => {
+    } catch (error: any) {
       console.error("Registreringsfeil:", error);
       let errorMessage = 'En ukjent feil oppstod. Prøv igjen.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'Denne e-postadressen er allerede i bruk.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Passordet er for svakt. Bruk minst 6 tegn.';
-      } else if (error.code === 'permission-denied' || error.code === 'firestore/permission-denied') {
-        errorMessage = 'Databasefeil: Ingen tilgang til å opprette bruker. Dette er en sikkerhetsregel-feil.';
-      } else if (error.message) {
+      } else {
         errorMessage = error.message;
       }
       
@@ -106,7 +91,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted">

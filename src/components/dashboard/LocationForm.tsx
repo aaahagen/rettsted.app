@@ -41,7 +41,7 @@ interface LocationFormProps {
 }
 
 export function LocationForm({ location }: LocationFormProps) {
-  const { user, loading } = useAuth();
+  const { user, claims, loading } = useAuth(); // Get claims from auth context
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,13 +59,21 @@ export function LocationForm({ location }: LocationFormProps) {
   });
 
   const onSubmit = async (values: LocationFormValues) => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Du er ikke logget inn.' });
+    // Ensure user and organizationId from claims are available
+    if (!user || !claims?.organizationId) {
+        toast({ 
+            variant: 'destructive', 
+            title: 'Autentiseringsfeil.',
+            description: 'Kunne ikke verifisere din organisasjonstilhørighet.'
+        });
         return;
     }
     
     try {
         let locationId = location?.id;
+        const orgId = claims.organizationId as string;
+        const orgName = user.organizationName || '';
+
         if (locationId) {
             // Update existing location
             const locationRef = doc(db, 'locations', locationId);
@@ -78,20 +86,17 @@ export function LocationForm({ location }: LocationFormProps) {
                 lastUpdatedAt: serverTimestamp(),
             }, { merge: true });
         } else {
-            // Create new location
+            // Create new location, now with organizationId and organizationName
             const newLocationRef = await addDoc(collection(db, 'locations'), {
                 ...values,
+                organizationId: orgId,
+                organizationName: orgName,
                 images: [],
                 createdBy: {
                     uid: user.uid,
                     name: user.displayName || 'Ukjent bruker',
                 },
                 createdAt: serverTimestamp(),
-                lastUpdatedBy: {
-                    uid: user.uid,
-                    name: user.displayName || 'Ukjent bruker',
-                },
-                lastUpdatedAt: serverTimestamp(),
             });
             locationId = newLocationRef.id;
         }
@@ -101,8 +106,8 @@ export function LocationForm({ location }: LocationFormProps) {
         router.refresh();
 
     } catch(error) {
-        console.error("Feil ved lagring av lokasjon:", error);
-        toast({ variant: 'destructive', title: 'Noe gikk galt', description: 'Kunne ikke lagre endringene.' });
+        console.error("Error saving location:", error);
+        toast({ variant: 'destructive', title: 'Noe gikk galt', description: 'Kunne ikke lagre endringene. Sjekk konsollen for feil.' });
     }
   };
   

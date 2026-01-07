@@ -82,7 +82,7 @@ export default function Home() {
                   alt={heroImage.description}
                   width={600}
                   height={400}
-                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
+                  className="mx-auto aspect-video h-auto overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
                   data-ai-hint={heroImage.imageHint}
                   priority
                 />

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function EditLocationPage({ params }: { params: { id: string } }) {
+  const { id } = params; // Use destructuring to access the id property
   const [location, setLocation] = useState<DeliveryLocation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -21,7 +22,7 @@ export default function EditLocationPage({ params }: { params: { id: string } })
   useEffect(() => {
     async function getLocation() {
       try {
-        const docRef = doc(db, "locations", params.id);
+        const docRef = doc(db, "locations", id); // Use the destructured id
         const docSnap = await getDoc(docRef);
 
         if (!docSnap.exists()) {
@@ -46,7 +47,7 @@ export default function EditLocationPage({ params }: { params: { id: string } })
     }
     
     getLocation();
-  }, [params.id]);
+  }, [id]); // Use the destructured id in the dependency array
 
   if (loading) {
     return (
